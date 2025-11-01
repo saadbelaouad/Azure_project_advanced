@@ -1,0 +1,36 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adflearningpro"
+		},
+		"ls_database_password": {
+			"value": ""
+		},
+		"ls_datalake_accountKey": {
+			"value": ""
+		},
+		"df_rest_properties_typeProperties_url": {
+			"value": "https://pokeapi.co/api/v2/pokemon"
+		},
+		"ls_database_properties_typeProperties_server": {
+			"value": "serverdflearning.database.windows.net"
+		},
+		"ls_database_properties_typeProperties_database": {
+			"value": "dblearning"
+		},
+		"ls_database_properties_typeProperties_userName": {
+			"value": "adminbelaouad"
+		},
+		"ls_datalake_properties_typeProperties_url": {
+			"value": "https://dflearningstorage.dfs.core.windows.net/"
+		},
+		"Schedule_properties_Scheduled_parameters_schema": {
+			"value": "source"
+		},
+		"Schedule_properties_Scheduled_parameters_table": {
+			"value": "Orders"
+		}
+	}
+}

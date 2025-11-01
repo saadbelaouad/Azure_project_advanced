@@ -1,0 +1,105 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adflearningpro"
+		},
+		"ls_database_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_database'"
+		},
+		"ls_datalake_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_datalake'"
+		},
+		"df_rest_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://pokeapi.co/api/v2/pokemon"
+		},
+		"ls_database_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "serverdflearning.database.windows.net"
+		},
+		"ls_database_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "dblearning"
+		},
+		"ls_database_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "adminbelaouad"
+		},
+		"ls_datalake_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dflearningstorage.dfs.core.windows.net/"
+		},
+		"Schedule_properties_Scheduled_parameters_schema": {
+			"type": "string",
+			"defaultValue": "source"
+		},
+		"Schedule_properties_Scheduled_parameters_table": {
+			"type": "string",
+			"defaultValue": "Orders"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adflearningpro_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"ls_database_password": {
+						"value": "[parameters('ls_database_password')]"
+					},
+					"ls_datalake_accountKey": {
+						"value": "[parameters('ls_datalake_accountKey')]"
+					},
+					"df_rest_properties_typeProperties_url": {
+						"value": "[parameters('df_rest_properties_typeProperties_url')]"
+					},
+					"ls_database_properties_typeProperties_server": {
+						"value": "[parameters('ls_database_properties_typeProperties_server')]"
+					},
+					"ls_database_properties_typeProperties_database": {
+						"value": "[parameters('ls_database_properties_typeProperties_database')]"
+					},
+					"ls_database_properties_typeProperties_userName": {
+						"value": "[parameters('ls_database_properties_typeProperties_userName')]"
+					},
+					"ls_datalake_properties_typeProperties_url": {
+						"value": "[parameters('ls_datalake_properties_typeProperties_url')]"
+					},
+					"Schedule_properties_Scheduled_parameters_schema": {
+						"value": "[parameters('Schedule_properties_Scheduled_parameters_schema')]"
+					},
+					"Schedule_properties_Scheduled_parameters_table": {
+						"value": "[parameters('Schedule_properties_Scheduled_parameters_table')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
