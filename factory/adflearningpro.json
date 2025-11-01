@@ -1,0 +1,9 @@
+{
+	"name": "adflearningpro",
+	"location": "francecentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "9693ac43-d6e9-42c3-bb48-a5e9d5c9f66c",
+		"tenantId": "517085ff-c1f1-4b90-8a7f-ed8816109cfe"
+	}
+}
