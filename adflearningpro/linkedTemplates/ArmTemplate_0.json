@@ -34,14 +34,6 @@
 		"ls_datalake_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dflearningstorage.dfs.core.windows.net/"
-		},
-		"Schedule_properties_Scheduled_parameters_schema": {
-			"type": "string",
-			"defaultValue": "source"
-		},
-		"Schedule_properties_Scheduled_parameters_table": {
-			"type": "string",
-			"defaultValue": "Orders"
 		}
 	},
 	"variables": {
@@ -1493,52 +1485,104 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Scheduled')]",
+			"name": "[concat(parameters('factoryName'), '/dataflow')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_csv_dynamic",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "ls_datalake",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "UpperState"
+						},
+						{
+							"name": "Selectcolums"
+						},
+						{
+							"name": "alterRow1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          location_id as short,",
+						"          city as string,",
+						"          state as string,",
+						"          country as string,",
+						"          latitude as double,",
+						"          longitude as double,",
+						"          last_updated_timestamp as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source1 derive(state = upper(state)) ~> UpperState",
+						"UpperState select(mapColumn(",
+						"          location_id,",
+						"          city,",
+						"          state,",
+						"          country,",
+						"          latitude,",
+						"          longitude,",
+						"          last_updated_timestamp",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> Selectcolums",
+						"Selectcolums alterRow(upsertIf(isNull(city)==false())) ~> alterRow1",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delta',",
+						"     fileSystem: 'sink',",
+						"     folderPath: 'deltasink',",
+						"     mergeSchema: false,",
+						"     autoCompact: false,",
+						"     optimizedWrite: false,",
+						"     vacuum: 0,",
+						"     deletable: false,",
+						"     insertable: false,",
+						"     updateable: false,",
+						"     upsertable: true,",
+						"     keys:['location_id'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_csv_dynamic')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_datalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Deltalake')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Execute Pipeline1",
-						"type": "ExecutePipeline",
+						"name": "deltaflow",
+						"type": "ExecuteDataFlow",
 						"dependsOn": [],
-						"policy": {
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"pipeline": {
-								"referenceName": "last_cdc",
-								"type": "PipelineReference"
-							},
-							"waitOnCompletion": true,
-							"parameters": {
-								"schema": {
-									"value": "@pipeline().parameters.schema",
-									"type": "Expression"
-								},
-								"table": {
-									"value": "@pipeline().parameters.table",
-									"type": "Expression"
-								},
-								"backdata": {
-									"value": "@pipeline().parameters.backdate",
-									"type": "Expression"
-								}
-							}
-						}
-					},
-					{
-						"name": "Alert",
-						"type": "WebActivity",
-						"dependsOn": [
-							{
-								"activity": "Execute Pipeline1",
-								"dependencyConditions": [
-									"Failed"
-								]
-							}
-						],
 						"policy": {
 							"timeout": "0.12:00:00",
 							"retry": 0,
@@ -1548,15 +1592,27 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"method": "POST",
-							"headers": {},
-							"url": {
-								"value": "https://prod-01.francecentral.logic.azure.com:443/workflows/e04fe21ce94f405a9637bb38501d86f0/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=8Z1sxAYFlYpIlQsBGZU9nYrDPgaNKMpTFWrDcXpNVL4",
-								"type": "Expression"
+							"dataflow": {
+								"referenceName": "dataflow",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {
+										"p_container": "source",
+										"p_folder": "deltasource",
+										"p_file": "locations.csv"
+									},
+									"sink1": {}
+								}
 							},
-							"body": {
-								"value": "{\n    \"pipeline_name\": \"@{pipeline().Pipeline}\",\n    \"pipeline_runId\": \"@{pipeline().RunId}\"\n}\n",
-								"type": "Expression"
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "None",
+							"cacheSinks": {
+								"firstRowOnly": true
 							}
 						}
 					}
@@ -1564,58 +1620,10 @@
 				"policy": {
 					"elapsedTimeMetric": {}
 				},
-				"parameters": {
-					"schema": {
-						"type": "string",
-						"defaultValue": "source"
-					},
-					"table": {
-						"type": "string",
-						"defaultValue": "Orders"
-					},
-					"backdate": {
-						"type": "string",
-						"defaultValue": "\"\""
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2025-10-30T15:20:08Z"
+				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/last_cdc')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Schedule')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "Scheduled",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"schema": "[parameters('Schedule_properties_Scheduled_parameters_schema')]",
-							"table": "[parameters('Schedule_properties_Scheduled_parameters_table')]"
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Day",
-						"interval": 1,
-						"startTime": "2025-10-28T22:16:00",
-						"timeZone": "Romance Standard Time"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Scheduled')]"
+				"[concat(variables('factoryId'), '/dataflows/dataflow')]"
 			]
 		}
 	]

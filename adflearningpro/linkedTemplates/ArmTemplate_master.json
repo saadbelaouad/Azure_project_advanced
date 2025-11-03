@@ -90,6 +90,24 @@
 					},
 					"ls_datalake_properties_typeProperties_url": {
 						"value": "[parameters('ls_datalake_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "adflearningpro_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"Schedule_properties_Scheduled_parameters_schema": {
 						"value": "[parameters('Schedule_properties_Scheduled_parameters_schema')]"
@@ -99,7 +117,9 @@
 					}
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'adflearningpro_ArmTemplate_0')]"
+			]
 		}
 	]
 }
