@@ -12,12 +12,72 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
-			"transformations": [],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "ls_datalake",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "UpperState"
+				},
+				{
+					"name": "Selectcolums"
+				},
+				{
+					"name": "alterRow1"
+				}
+			],
 			"scriptLines": [
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          location_id as short,",
+				"          city as string,",
+				"          state as string,",
+				"          country as string,",
+				"          latitude as double,",
+				"          longitude as double,",
+				"          last_updated_timestamp as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source1"
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(state = upper(state)) ~> UpperState",
+				"UpperState select(mapColumn(",
+				"          location_id,",
+				"          city,",
+				"          state,",
+				"          country,",
+				"          latitude,",
+				"          longitude,",
+				"          last_updated_timestamp",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> Selectcolums",
+				"Selectcolums alterRow(upsertIf(isNull(city) == false() \r",
+				")) ~> alterRow1",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'sink',",
+				"     folderPath: 'deltasink',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     upsertable: true,",
+				"     keys:['location_id'],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
 			]
 		}
 	}
