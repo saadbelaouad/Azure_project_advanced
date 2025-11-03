@@ -15,7 +15,7 @@ The project is a hands-on implementation inspired by **real-world enterprise dat
 - Implement **incremental loading** using **JSON watermarks**
 - Handle **pagination** and dynamic API parameters
 - Leverage **ADF activities** such as Lookup, ForEach, Switch, and Validation
-- Store processed data in **Delta Lake** format for ACID compliance and schema evolution
+- Store processed data in **Delta Lake** format
 - Add **pipeline validation and monitoring** with **email alerts**
 - Integrate with **GitHub** for version control and **CI/CD deployment**
 
